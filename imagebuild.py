@@ -605,8 +605,6 @@ class Installer:
         "http_proxy"      : '',
       }
     }
-    #print(host_configuration)
-    #sys.exit(0)
     merge_recursive(configuration, host_configuration)
 
     filename = "image.yaml"
@@ -614,18 +612,11 @@ class Installer:
     # Merge configs found in "/etc" local or in "etc", "." relative to the script directory
     for dir_prefix in [ "/etc" , os.path.join(sys.path[0], "etc"), sys.path[0] ]:
       fullpath = os.path.join(dir_prefix, filename)
-      #print(fullpath)
       merge_config(fullpath, configuration)
 
     if config_file != "":
-      # finally the config_file of the user
-      #fullpath = os.path.join(sys.path[0], config_file)
-      #fullpath = os.path.join(os.getcwd(), config_file)
       fullpath = os.path.abspath(config_file)
-      #print(fullpath)
       merge_config(fullpath, configuration)
-      #print(configuration)
-      #exit(0)
 
     target     = configuration['target']
     os_name    = target['os_name'] 
@@ -658,7 +649,6 @@ class Installer:
     val=yaml.dump(configuration, explicit_start=True,indent=2, default_flow_style=False)
     print(val)
     work = DictToObject(configuration['work'])
-    #sys.exit(0)
   
     pmb.mkdir_p(work.install_dir)
 
@@ -700,9 +690,6 @@ if __name__ == "__main__":
   if os.geteuid() != 0:
     exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
   install=Installer()
-  #if len(sys.argv) < 2:
-  #  print(sys.argv[0] + " [config_file]")
-  #  sys.exit(1)
   if len(sys.argv) < 2:
     install.main(default_configuration, "")
   else:
