@@ -15,24 +15,26 @@ Here are your "options". For installing _one_ package
 CENTOS
 -------
     # For python 
-    yum install PyYAML
+    yum install PyYAML python2-configparser
     #For python3 
-    yum install python3-PyYAML
+    yum install python3-PyYAML python3-configparser
 
 FEDORA
 ------
     # For python 
-    dnf install PyYAML
+    dnf install PyYAML python2-configparser
     #For python3 
-    dnf install python3-PyYAML
+    dnf install python3-PyYAML python3-configparser
 
 
 PIP
 ---
     # python 
     pip install pyyaml
-    # python3
+    pip install configparser
+    # python3 (on fedora/centos)
     pip3 install pyyaml
+    pip3 install configparser
 
 
 
