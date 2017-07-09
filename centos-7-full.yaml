@@ -1,29 +1,31 @@
 ---
 target:
-        #  os_name:   "fedora"
-        #  os_version: 25
   os_name:   "centos"
   os_version: 7
 #  lang: "de_DE.UTF-8"
-#  lang: [ "en_US.UTF-8", "de_DE.UTF-8" ]
+#  lang: [ "en_US.UTF-8", "de_DE.UTF-8" ]   #  First item is always the default language
   lang: "en_US.UTF-8"
   lang_all: 0
-  nodocs: 1
-  repo_list_orig:
-  - fedora
-  - updates
-  - updates-testing
-  repo_list_orig:
-  - centos-base
-  - centos-updates
-  - centos-extras
-  package_list_orig: 
-  - bash
-  - rootfiles
-  - e2fsprogs 
-  - dnf
-  - fedora-release
+  nodocs: 1                                 # Either do not install documentation (1)  or install docummentation (0)
+
+#  Change repos 
+ # repo_list:
+ # - fedora
+ # - updates
+ # - updates-testing
+
+# Override packages which are in a base in stall
+#
+#  package_list: 
+#  - bash
+#  - rootfiles
+#  - e2fsprogs 
+#  - dnf
+#  - fedora-release
+#
+# Change default package manager
   package_manager: "yum"
 
+# How the image labelled as docker image
 docker: 
   image: "master.%os_name%-%os_version%-full"
