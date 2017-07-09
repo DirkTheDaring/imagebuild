@@ -1,0 +1,25 @@
+---
+# proxy doesn't make sense on bootstrap
+#work:
+#  http_proxy: "http://192.168.178.254:3128"
+target:
+  os_name:   "fedora"
+  os_version: 25
+#  lang: "de_DE.UTF-8"
+#  lang: [ "en_US.UTF-8", "de_DE.UTF-8" ]
+  lang: "en_US.UTF-8"
+  lang_all: 0
+  nodocs: 0
+  repo_list:
+  - fedora
+  - updates
+    #  - updates-testing
+  package_list: 
+  - bash
+  - rootfiles
+  - e2fsprogs 
+  - dnf
+  - fedora-release
+
+docker: 
+  image: "master.%os_name%-%os_version%-full"
