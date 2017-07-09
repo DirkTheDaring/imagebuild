@@ -9,32 +9,32 @@ updated images from fedora or centos.
 
 it works with python / python3. Default is python.
 
-On some distributions you need to install pyyaml first.
-Here are your "options". For installing _one_ package  
+On may need to install pyyaml and configparser first.
+Here are your "options". For installing these packages.
 
 CENTOS
 -------
     # For python 
-    yum install PyYAML python2-configparser
+    sudo yum install PyYAML python2-configparser
     #For python3 
-    yum install python3-PyYAML python3-configparser
+    sudo yum install python3-PyYAML python3-configparser
 
 FEDORA
 ------
     # For python 
-    dnf install PyYAML python2-configparser
+    sudo dnf install PyYAML python2-configparser
     #For python3 
-    dnf install python3-PyYAML python3-configparser
+    sudo dnf install python3-PyYAML python3-configparser
 
 
 PIP
 ---
     # python 
-    pip install pyyaml
-    pip install configparser
+    sudo pip install pyyaml
+    sudo pip install configparser
     # python3 (on fedora/centos)
-    pip3 install pyyaml
-    pip3 install configparser
+    sudo pip3 install pyyaml
+    sudo pip3 install configparser
 
 
 
