@@ -1,9 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # MIT License. See LICENSE File in repository
 # Under alpine
 # apk update
 # apk add python3
 # pip3 install pyyaml
+from __future__ import print_function
 
 import os
 import yaml
@@ -381,6 +382,7 @@ def merge_recursive(target, source):
       merge_recursive(tmp_target,value)
       target[key] = tmp_target
     else:
+      #print(key)
       target[key]  = value
 
 
@@ -389,6 +391,8 @@ def merge_config(filename, configuration):
     f = open(filename, 'r')
     y = yaml.load(f)
     f.close()
+    #print(y)
+    #exit(0)
     merge_recursive(configuration, y)
 
 class Patch:
@@ -604,6 +608,7 @@ class Installer:
     #print(host_configuration)
     #sys.exit(0)
     merge_recursive(configuration, host_configuration)
+
     filename = "image.yaml"
 
     # Merge configs found in "/etc" local or in "etc", "." relative to the script directory
@@ -614,10 +619,13 @@ class Installer:
 
     if config_file != "":
       # finally the config_file of the user
-      fullpath = os.path.join(sys.path[0], config_file)
+      #fullpath = os.path.join(sys.path[0], config_file)
+      #fullpath = os.path.join(os.getcwd(), config_file)
+      fullpath = os.path.abspath(config_file)
       #print(fullpath)
       merge_config(fullpath, configuration)
       #print(configuration)
+      #exit(0)
 
     target     = configuration['target']
     os_name    = target['os_name'] 
