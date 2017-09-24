@@ -1,10 +1,8 @@
-#!/usr/bin/env python
-# MIT License. See LICENSE File in repository
+#!/usr/bin/env python3
 # Under alpine
 # apk update
 # apk add python3
 # pip3 install pyyaml
-from __future__ import print_function
 
 import os
 import yaml
@@ -62,6 +60,7 @@ class Locale(ShellConfig):
 class DictToObject:
   def __init__(self, dict):
     self.__dict__.update(dict)
+
 
 
 class PackageManagerBase:
@@ -268,12 +267,31 @@ class RedhatPackageManager(PackageManagerBase):
     array.extend(package_list)
     return array
 
-  def install_yum_repo(self, repo_short_name, repo_name, repo_var):
-    array=[] 
+  def create_repo_url(self,repo_var,baseurl):
+    if baseurl != "":
+      return baseurl
+    return "metalink=https://mirrors.fedoraproject.org/metalink?repo="+repo_var+"$releasever&arch=$basearch"
+
+
+  def install_yum_repo(self,repo_short_name, baseurl=""):
+
+    if repo_short_name == "fedora":
+        repo_name = "Fedora $releasever - $basearch"
+        baseurl   = self.create_repo_url("fedora-", baseurl)
+
+    if repo_short_name == "updates":
+        repo_name = "Fedora $releasever - $basearch - Updates"
+        baseurl   = self.create_repo_url("updates-released-f", baseurl)
+
+    if repo_short_name == "updates-testing":
+        repo_name = "Fedora $releasever - $basearch - Test Updates"
+        baseurl   = self.create_repo_url("updates-testing-f",baseurl)
+
+    array=[]
     array.append("["+repo_short_name+"]")
     array.append("name="+repo_name)
     array.append("failovermethod=priority")
-    array.append("metalink=https://mirrors.fedoraproject.org/metalink?repo="+repo_var+"$releasever&arch=$basearch")
+    array.append(baseurl)
     array.append("enabled=1")
     array.append("metadata_expire=1h")
     array.append("gpgcheck=1")
@@ -281,6 +299,7 @@ class RedhatPackageManager(PackageManagerBase):
     array.append("skip_if_unavailable=False")
     result = "\n".join(array)
     return result
+
 
   def install_yum_repo_centos(self):
     result = """
@@ -382,7 +401,6 @@ def merge_recursive(target, source):
       merge_recursive(tmp_target,value)
       target[key] = tmp_target
     else:
-      #print(key)
       target[key]  = value
 
 
@@ -391,8 +409,6 @@ def merge_config(filename, configuration):
     f = open(filename, 'r')
     y = yaml.load(f)
     f.close()
-    #print(y)
-    #exit(0)
     merge_recursive(configuration, y)
 
 class Patch:
@@ -537,17 +553,20 @@ class Installer:
     #print(content)
     #exit(1)
     rpm.tofile(content, repo_conf_file)
+    
+    repo_url = {}
+    if "repo_url" in configuration["target"]:
+        repo_url = configuration["target"]["repo_url"]
 
     if os_name == "fedora":
-      content = rpm.install_yum_repo("fedora"         , "Fedora $releasever - $basearch"                 ,"fedora-")
-      rpm.tofile(content, os.path.join(yum_repos_dir, "fedora.repo"))
+      for repo_name in target.repo_list:
+        url=""
+        if repo_name in repo_url:
+            url="baseurl="+repo_url[repo_name]
+        #print(url)
+        content = rpm.install_yum_repo(repo_name, url)
+        rpm.tofile(content, os.path.join(yum_repos_dir, repo_name+".repo" ))
  
-      content = rpm.install_yum_repo("updates"        , "Fedora $releasever - $basearch - Updates"       ,"updates-released-f")
-      rpm.tofile(content, os.path.join(yum_repos_dir, "fedora-updates.repo"))
-
-      content = rpm.install_yum_repo("updates-testing", "Fedora $releasever - $basearch - Test Updates"  ,"updates-testing-f")
-      rpm.tofile(content, os.path.join(yum_repos_dir, "fedora-updates-testing.repo"))
-
     elif os_name == "centos":
       content = rpm.install_yum_repo_centos()
       rpm.tofile(content, os.path.join(yum_repos_dir, "fedora-updates-testing.repo"))
@@ -605,18 +624,23 @@ class Installer:
         "http_proxy"      : '',
       }
     }
+    #print(host_configuration)
+    #sys.exit(0)
     merge_recursive(configuration, host_configuration)
-
     filename = "image.yaml"
 
     # Merge configs found in "/etc" local or in "etc", "." relative to the script directory
     for dir_prefix in [ "/etc" , os.path.join(sys.path[0], "etc"), sys.path[0] ]:
       fullpath = os.path.join(dir_prefix, filename)
+      #print(fullpath)
       merge_config(fullpath, configuration)
 
     if config_file != "":
-      fullpath = os.path.abspath(config_file)
+      # finally the config_file of the user
+      fullpath = os.path.join(sys.path[0], config_file)
+      #print(fullpath)
       merge_config(fullpath, configuration)
+      #print(configuration)
 
     target     = configuration['target']
     os_name    = target['os_name'] 
@@ -649,6 +673,7 @@ class Installer:
     val=yaml.dump(configuration, explicit_start=True,indent=2, default_flow_style=False)
     print(val)
     work = DictToObject(configuration['work'])
+    #sys.exit(0)
   
     pmb.mkdir_p(work.install_dir)
 
@@ -687,9 +712,10 @@ default_configuration = {
 }
 
 if __name__ == "__main__":
-  if os.geteuid() != 0:
-    exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
   install=Installer()
+  #if len(sys.argv) < 2:
+  #  print(sys.argv[0] + " [config_file]")
+  #  sys.exit(1)
   if len(sys.argv) < 2:
     install.main(default_configuration, "")
   else:
