@@ -689,6 +689,12 @@ class Installer:
 
     Patch().apply(target.lang, target.package_manager,work.install_dir,target.nodocs, target.proxy)
 
+    if os_name == "fedora":
+      cmd = [ 'chroot', work.install_dir, 'rpm', '--import', '/etc/pki/rpm-gpg/RPM-GPG-KEY-'+os_name+'-'+str(os_version)+'-primary' ]
+      print(" ".join(cmd))
+      return_code = pmb.execute2(cmd, "/root")
+      print(return_code)
+
     if "docker" in configuration:
       image_name=configuration["docker"]["image"]
       print("Creating image: "+image_name)
