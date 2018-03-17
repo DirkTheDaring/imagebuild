@@ -12,6 +12,7 @@ import subprocess
 import errno
 import glob
 import configparser
+import datetime
 from distutils.version import LooseVersion
 
 class ShellConfig:
@@ -599,6 +600,13 @@ class Installer:
     cmd=array
     return cmd
 
+  def populate_build_version(self, build_version_format, work,os_name,os_version):
+    build_version_format = build_version_format.replace("%build_datetime%", work['build_datetime'])
+    build_version_format = build_version_format.replace("%os_name%", os_name )
+    build_version_format = build_version_format.replace("%os_version%",    str(os_version))
+    return build_version_format
+
+
   def main(self, default_configuration, config_file=""):
 
     configuration         = default_configuration.copy()
@@ -620,7 +628,8 @@ class Installer:
         "package_manager" : package_manager,
       },
       "work": {
-        "build_root": "/var/lib/build",
+        "build_root"      : "/var/lib/build",
+        "build_datetime"  : "%Y%m%d%H%M",
         "http_proxy"      : '',
       }
     }
@@ -652,16 +661,21 @@ class Installer:
     configuration['target']=target
     
     target = DictToObject(configuration['target'])
-    work                 = configuration['work']
-    work['build_dir']    = os.path.join(configuration['work']['build_root'], target.os_name +"-" + str(target.os_version), target.profile)
-    work['install_dir']  = os.path.join(work['build_dir'],"install")
+    work                   = configuration['work']
+    work['build_dir']      = os.path.join(configuration['work']['build_root'], target.os_name +"-" + str(target.os_version), target.profile)
+    work['install_dir']    = os.path.join(work['build_dir'],"install")
+    work['build_datetime'] = datetime.datetime.today().strftime(work['build_datetime'])
 
     configuration['work']= work
 
+
+
     if "docker" in configuration:
       image_name=configuration["docker"]["image"]
-      image_name = image_name.replace("%os_name%",    os_name)
-      image_name = image_name.replace("%os_version%", str(os_version))
+      image_name = image_name.replace("%os_name%",       os_name)
+      image_name = image_name.replace("%os_version%",    str(os_version))
+      image_name = image_name.replace("%build_version%", self.populate_build_version("%os_name%-%os_version%-%build_datetime%",work,os_name,os_version))
+
       configuration["docker"]["image"] = image_name
 
     val=yaml.dump(configuration, explicit_start=True,indent=2, default_flow_style=False)
@@ -692,8 +706,21 @@ class Installer:
     if "docker" in configuration:
       image_name=configuration["docker"]["image"]
       print("Creating image: "+image_name)
-      a="cd \"" + work.install_dir + "\" && tar -c . |docker import - \""+image_name+"\""
-      subprocess.call(a,  shell=True)
+      #a="cd \"" + work.install_dir + "\" && tar -c . |docker import - \""+image_name+"\""
+      #subprocess.call(a,  shell=True)
+      cmd="tar -c . |docker import - \""+image_name+"\""
+      ps = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, cwd=work.install_dir)
+      output = ps.communicate()[0]
+      output = output.decode('utf-8').rstrip()
+      if output == "":
+          sys.exit(10)
+      #digest, image_id = output.split(':')
+      #print(image_id)
+      print(output)
+      image_prefix = image_name.split(':')[0]
+      cmd = 'docker tag ' + image_name + ' ' + image_prefix + ':latest'
+      print(cmd)
+      subprocess.call(cmd,  shell=True)
 
 
 
