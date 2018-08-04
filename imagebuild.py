@@ -68,69 +68,72 @@ class PackageManagerBase:
   def __init__(self):
     pass
 
-  def compare_version(self, a,b):
-      if  a == "rawhide":
-        va = LooseVersion(str(sys.maxsize))
-      else:
-        va = LooseVersion(str(a))
+  def is_version_lt_or_eq(self, a , b ):
+    if a == "rawhide":
+       a == sys.maxsize
+    if b == "rawhide":
+       b == sys.maxsize
 
-      if  b == "rawhide":
-        vb = LooseVersion(str(sys.maxsize))
-      else:
-        vb = LooseVersion(str(b))
+    return (LooseVersion(str(a)) <= LooseVersion(str(b)))
 
-      return (va > vb)
+
+  def pick_entry(self, table, os_name, os_version):
+
+    for entry in table:
+        if entry[0] == os_name: 
+            # we have a version limit, check it
+            if len(entry) == 3:
+                if self.is_version_lt_or_eq(os_version, entry[2]):
+                   return entry[1]
+            else:
+                return entry[1]
+
+    return ""
+
 
   def determine_package_manager(self, os_name, os_version):
-    if os_name == "fedora":
-      if self.compare_version(os_version, 21): 
-        return "dnf"
-      else:
-        return "yum"
 
-    elif os_name == "centos":
-      return "yum"
+    # With the third optional column you can limit the version
+    # This requires that smaller version are in sequence in the table.
 
-    elif os_name == "rhel":
-      return "yum"
+    table = [ 
+      [ 'fedora', 'yum', 21 ], 
+      [ 'fedora', 'dnf'],
+      [ 'centos', 'yum'],
+      [ 'rhel',   'yum'],
+      [ 'debian', 'apt-get'],
+      [ 'alpine', 'apk'],
+    ]
 
-    elif os_name == "debian":
-      return "apt-get"
+    return self.pick_entry(table,os_name,os_version)
 
-    elif os_name == "alpine":
-      return "apk"
-    else:
-      return ""
 
   def package_list(self, os_name, os_version):
-    if os_name == "fedora":
-      if self.compare_version(os_version, 21): 
-        list = "bash rootfiles vim-minimal sssd-client e2fsprogs dnf dnf-yum fedora-release"
-      else:
-        list = "bash rootfiles vim-minimal sssd-client e2fsprogs yum fedora-release"
-    elif os_name == "centos":
-      list = "bash rootfiles vim-minimal sssd-client e2fsprogs yum systemd centos-release"
-    elif os_name == "rhel":
-      list = "bash rootfiles vim-minimal sssd-client e2fsprogs yum rhel-release"
-    elif os_name == "alpine":
-      list = "alpine-base"
-    else:
-      list = ""
 
-    return list.split()
+    # With the third optional column you can limit the version
+    # This requires that smaller version are in sequence in the table.
+
+    table = [
+      [ 'fedora', 'bash rootfiles vim-minimal sssd-client e2fsprogs yum fedora-release', 21 ], 
+      [ 'fedora', 'bash rootfiles vim-minimal sssd-client e2fsprogs dnf dnf-yum fedora-release'], 
+      [ 'centos', 'bash rootfiles vim-minimal sssd-client e2fsprogs yum systemd centos-release'],
+      [ 'rhel',   'bash rootfiles vim-minimal sssd-client e2fsprogs yum rhel-release'],
+      [ 'debian', 'FIXME'],
+      [ 'ubuntu', 'FIXME'],
+      [ 'alpine', 'alpine-base'],
+    ]
+
+    package_list = self.pick_entry(table,os_name,os_version)
+    return package_list.split()
 
   def package_list_add(self, os_name, os_version):
-    if os_name == "fedora":
-      list = "procps-ng"
-      list =""
-    elif os_name == "centos":
-      list = ""
-    elif os_name == "rhel":
-      list = ""
-    else: 
-      list = ""
-
-    return list.split()
+    table = [
+      ['fedora', 'procps-ng'],
+      ['centos', ''],
+      ['rhel'  , '']
+    ]
+    package_list = self.pick_entry(table,os_name,os_version)
+    return package_list.split()
 
   def get_repository_list(self, os_name, os_version):
 
@@ -152,6 +155,15 @@ class PackageManagerBase:
 #        print("success")
     except OSError as exc:  # Python >2.5
         if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+  def symlink(self,src,dst):
+    try:
+        os.symlink(src,dst)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST:
             pass
         else:
             raise
@@ -301,7 +313,6 @@ class RedhatPackageManager(PackageManagerBase):
     result = "\n".join(array)
     return result
 
-
   def install_yum_repo_centos(self):
     result = """
 [centos-base]
@@ -352,31 +363,6 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
         break
       if out != b'':
         print(out.decode('utf-8'), end="")
-
-
-  def dump(self, host, target):
-    print("HOST_OS_NAME      : "+ host.os_name)
-    print("HOST_OS_VERSION   : "+ host.os_version)
-    print("HOST_LANG         : "+ host.lang)
-    print("PACKAGE_MANAGER   : "+ host.package_manager)
-    print("")
-    print("PROFILE           : "+ target.profile)
-    print("TARGET_OS_NAME    : "+ target.os_name)
-    print("TARGET_OS_VERSION : "+ target.os_version)
-    print("TARGET_LANG       : "+ target.lang)
-    print("TARGET_LANG_ALL   : "+ target.lang_all)
-    print("TARGET_NODOCS     : "+ target.nodocs)
-    print("")
-    print("REPO_LIST         : "+ " ".join(target.repo_list))
-    print("PACKAGE_LIST      : "+ " ".join(target.package_list))
-    print("PACKAGE_LIST_ADD  : "+ " ".join(target.package_list_add))
-    print("PACKAGE_MANAGER   : "+ target.package_manager)
-    print("")
-    print("IMAGE_NAME        : "+target.image_name)
-    print("")
-    print("WORK_DIR          : "+target.work_dir)
-    print("BUILD_DIR         : "+target.build_dir)
-    print("INSTALL_ROOT      : "+target.install_root)
 
 
   def current_dir(self):
@@ -447,6 +433,10 @@ class Patch:
     print("Patching /etc/dnf/dnf.conf")
     configParser = configparser.ConfigParser()
     fullpath     = os.path.join(self.install_dir, filename)
+
+    if not os.path.isfile(fullpath):
+        return
+
     configParser.read(fullpath)
 
     if nodocs == 1:
@@ -606,6 +596,27 @@ class Installer:
     build_version_format = build_version_format.replace("%os_version%",    str(os_version))
     return build_version_format
 
+  def create_dirs(self, pmb, install_dir, dirs):
+    if not "dirs" in dirs:
+      return 
+    for dir in dirs["dirs"]:
+        if dir[0] == '/':
+            dir = dir[1:]
+        target_dir = os.path.join(install_dir,dir)
+        print(target_dir)
+        pmb.mkdir_p(target_dir)
+
+  def create_symlinks(self, pmb, install_dir, dirs):
+    if not "symlinks" in dirs:
+      return 
+    for symlink in dirs["symlinks"]:
+        for link in dirs["symlinks"][symlink]:
+          if link[0] == '/':
+            link = link[1:]
+          target = os.path.join(install_dir,link)
+          print(target)
+          pmb.symlink(symlink,target)
+
 
   def main(self, default_configuration, config_file=""):
 
@@ -674,6 +685,7 @@ class Installer:
       image_name=configuration["docker"]["image"]
       image_name = image_name.replace("%os_name%",       os_name)
       image_name = image_name.replace("%os_version%",    str(os_version))
+      image_name = image_name.replace("%profile%",       target.profile)
       image_name = image_name.replace("%build_version%", self.populate_build_version("%os_name%-%os_version%-%build_datetime%",work,os_name,os_version))
 
       configuration["docker"]["image"] = image_name
@@ -681,10 +693,26 @@ class Installer:
     val=yaml.dump(configuration, explicit_start=True,indent=2, default_flow_style=False)
     print(val)
     work = DictToObject(configuration['work'])
-    #sys.exit(0)
-  
+ 
     pmb.mkdir_p(work.install_dir)
+    dirs = { "target" : {
+         "dirs": {
+           "/bin": {
+              "mode": "0666",
+              "owner": "root",
+              "group": "root"
+               },
+          "/ftp": {
+              "mode":  "0666",
+              "owner": "root",
+              "group": "root"
+              }
 
+      }}}
+
+
+    #sys.exit(0)
+ 
     if os_name == "alpine":
       cmd = self.prepare_alpine_distribution(configuration,work,target)
     else:
@@ -696,6 +724,10 @@ class Installer:
       sys.exit(1)
 
     Patch().apply(target.lang, target.package_manager,work.install_dir,target.nodocs, target.proxy)
+
+    self.create_dirs(pmb, work.install_dir,configuration['target'])
+    self.create_symlinks(pmb, work.install_dir,configuration['target'])
+
 
     if os_name == "fedora":
       cmd = [ 'chroot', work.install_dir, 'rpm', '--import', '/etc/pki/rpm-gpg/RPM-GPG-KEY-'+os_name+'-'+str(os_version)+'-primary' ]
@@ -712,7 +744,7 @@ class Installer:
       ps = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, cwd=work.install_dir)
       output = ps.communicate()[0]
       output = output.decode('utf-8').rstrip()
-      if output == "":
+      if ps.returncode != 0:
           sys.exit(10)
       #digest, image_id = output.split(':')
       #print(image_id)
