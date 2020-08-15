@@ -13,6 +13,7 @@ import errno
 import glob
 import configparser
 import datetime
+import argparse
 from distutils.version import LooseVersion
 
 class ShellConfig:
@@ -755,6 +756,11 @@ class Installer:
       print(cmd)
       subprocess.call(cmd,  shell=True)
 
+def parse_cmdline():
+    parser = argparse.ArgumentParser("imagebuild")
+    parser.add_argument('--build-root', metavar='work_build_root', help='build_root')
+    parsed_args = parser.parse_args()
+    return parsed_args
 
 
 default_configuration = {
@@ -768,6 +774,9 @@ default_configuration = {
     "lang_all":  0,
     "profile":   'full',
     "proxy": "",
+  },
+  "work": {
+     "build_root"      : "/var/lib/build",
   }
 }
 
@@ -775,7 +784,11 @@ if __name__ == "__main__":
   if os.geteuid() != 0:
     exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
 
+  parsed_args = parse_cmdline()
+  if parsed_args.build_root:
+     default_configuration['work']['build_root']=parsed_args.build_root
   install=Installer()
+
   #if len(sys.argv) < 2:
   #  print(sys.argv[0] + " [config_file]")
   #  sys.exit(1)
