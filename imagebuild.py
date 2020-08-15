@@ -782,18 +782,16 @@ default_configuration = {
 }
 
 if __name__ == "__main__":
-  if os.geteuid() != 0:
-    exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
-
-  parsed_args = parse_cmdline()
+    if os.geteuid() != 0:
+        exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
+    parsed_args = parse_cmdline()
   #print(parsed_args)
-  if parsed_args.build_root:
-     default_configuration['work']['build_root']=parsed_args.build_root
+    if parsed_args.build_root:
+        default_configuration['work']['build_root']=parsed_args.build_root
+    install=Installer()
 
-  install=Installer()
-
-  if len(parsed_args.argv) > 0:
-      install.main(default_configuration, parsed_args.argv[0])
-  else:
-      install.main(default_configuration, "")
+    if len(parsed_args.argv) > 0:
+        install.main(default_configuration, parsed_args.argv[0])
+    else:
+        install.main(default_configuration, "")
 
