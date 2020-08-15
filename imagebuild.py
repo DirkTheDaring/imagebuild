@@ -687,6 +687,7 @@ class Installer:
       image_name = image_name.replace("%os_version%",    str(os_version))
       image_name = image_name.replace("%profile%",       target.profile)
       image_name = image_name.replace("%build_version%", self.populate_build_version("%os_name%-%os_version%-%build_datetime%",work,os_name,os_version))
+      image_name = image_name.replace("%build_datetime%", work['build_datetime'])
 
       configuration["docker"]["image"] = image_name
 
