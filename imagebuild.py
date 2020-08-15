@@ -758,7 +758,7 @@ class Installer:
 
 def parse_cmdline():
     parser = argparse.ArgumentParser("imagebuild")
-    parser.add_argument('argv', metavar='argv', nargs='+', help='file')
+    parser.add_argument('argv', metavar='argv', nargs='*', help='file')
     parser.add_argument('--build-root', metavar='build_root', default='/var/lib/build', help='build_root')
     parsed_args = parser.parse_args()
     return parsed_args
@@ -791,5 +791,9 @@ if __name__ == "__main__":
      default_configuration['work']['build_root']=parsed_args.build_root
 
   install=Installer()
-  install.main(default_configuration, parsed_args.argv[0])
+
+  if len(parsed_args.argv) > 0:
+      install.main(default_configuration, parsed_args.argv[0])
+  else:
+      install.main(default_configuration, "")
 
