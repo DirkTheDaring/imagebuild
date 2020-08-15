@@ -640,7 +640,7 @@ class Installer:
         "package_manager" : package_manager,
       },
       "work": {
-        "build_root"      : "/var/lib/build",
+#        "build_root"      : "/var/lib/build",
         "build_datetime"  : "%Y%m%d%H%M",
         "http_proxy"      : '',
       }
@@ -758,7 +758,8 @@ class Installer:
 
 def parse_cmdline():
     parser = argparse.ArgumentParser("imagebuild")
-    parser.add_argument('--build-root', metavar='work_build_root', help='build_root')
+    parser.add_argument('argv', metavar='argv', nargs='+', help='file')
+    parser.add_argument('--build-root', metavar='build_root', default='/var/lib/build', help='build_root')
     parsed_args = parser.parse_args()
     return parsed_args
 
@@ -785,15 +786,10 @@ if __name__ == "__main__":
     exit("You need to have root privileges to run this script.\nPlease try again, this time using 'sudo'. Exiting.")
 
   parsed_args = parse_cmdline()
+  #print(parsed_args)
   if parsed_args.build_root:
      default_configuration['work']['build_root']=parsed_args.build_root
-  install=Installer()
 
-  #if len(sys.argv) < 2:
-  #  print(sys.argv[0] + " [config_file]")
-  #  sys.exit(1)
-  if len(sys.argv) < 2:
-    install.main(default_configuration, "")
-  else:
-    install.main(default_configuration, sys.argv[1])
+  install=Installer()
+  install.main(default_configuration, parsed_args.argv[0])
 
