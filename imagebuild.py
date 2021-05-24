@@ -3,6 +3,8 @@
 # apk update
 # apk add python3
 # pip3 install pyyaml
+# under Fedora
+# dnf install -y python3-pyyaml
 
 import os
 import yaml
