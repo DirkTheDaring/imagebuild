@@ -1,0 +1,62 @@
+---
+target:
+  os_name:   "fedora"
+  os_version: 34
+  lang: "en_US.UTF-8"
+  lang_all: 0
+  nodocs: 0
+  repo_list:
+  - fedora
+  - updates
+  package_list: 
+  - bash
+  - rootfiles
+  - e2fsprogs 
+  - dnf
+  - fedora-release
+  - grub2-efi-aa64
+  - grub2-tools-minimal
+  - grubby
+  - kernel
+  - kernel-core
+  - kernel-modules
+  - abrt
+  - abrt-addon-ccpp
+  - abrt-addon-kerneloops
+  - abrt-addon-vmcore
+  - abrt-addon-xorg
+  - at
+  - audit
+  - bluez
+  - chrony
+    #  - dbus-broker
+  - device-mapper-multipath
+  - firewalld
+  - initscripts
+  - irqbalance
+  - iscsi-initiator-utils
+  - lm_sensors
+  - lvm2
+  - mdadm
+  - ModemManager
+  - NetworkManager
+  - nfs-utils
+  - openssh-server
+  - ostree
+  - policycoreutils
+    #  - rpm
+  - rsyslog
+  - smartmontools
+  - sssd-common
+    #  - systemd
+  - udisks2
+  - shim-aa64
+  - passwd
+  - vi
+  - libselinux-utils
+  - sudo
+  - e2fsprogs
+
+docker: 
+  image: "master.%os_name%-%os_version%-full"
+
